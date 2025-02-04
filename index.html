@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Chatbot</title>
     <style>
-                body {
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            background: linear-gradient(135deg, #FF5F6D, #FFC371);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,29 +18,30 @@
         #chat-container {
             width: 450px;
             background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             height: 600px;
             overflow: hidden;
+            border: 1px solid #ddd;
         }
         #chat-box {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
-            background-color: #f9f9f9;
+            background-color: #f7f7f7;
             border-bottom: 1px solid #eee;
         }
         .message {
             display: inline-block;
             margin: 10px;
-            max-width: 80%;
+            max-width: 75%;
             word-wrap: break-word;
             border-radius: 15px;
-            padding: 12px 16px;
-            font-size: 14px;
-            line-height: 1.5;
+            padding: 15px 20px;
+            font-size: 16px;
+            line-height: 1.6;
             position: relative;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
@@ -79,25 +80,26 @@
             border-top: 1px solid #eee;
         }
         #user-input {
-            width: 75%;
-            padding: 12px;
+            width: 80%;
+            padding: 14px 20px;
             border-radius: 25px;
             border: 1px solid #ddd;
             font-size: 14px;
             outline: none;
             transition: border-color 0.3s ease;
+            box-sizing: border-box;
         }
         #user-input:focus {
             border-color: #007bff;
         }
         #send-button {
-            padding: 12px 20px;
+            padding: 14px 22px;
             background-color: #007bff;
             color: #fff;
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             transition: background-color 0.3s ease;
         }
         #send-button:hover {
@@ -107,7 +109,7 @@
             font-style: italic;
             color: #888;
             margin: 10px 0;
-            font-size: 13px;
+            font-size: 14px;
         }
         #chat-box::-webkit-scrollbar {
             width: 8px;
@@ -123,6 +125,17 @@
         #chat-box::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeydown="handleKeyPress(event)">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
 
     <script>
         const questions = [
@@ -265,7 +278,7 @@
             { input: "thanks", response: "You're welcome!" },
             { input: "help", response: "Sure! Ask me any questions about courses, fees, or academics." }
         ];
-z
+
         function sendMessage() {
             let inputField = document.getElementById("user-input");
             let userText = inputField.value.trim();
