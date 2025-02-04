@@ -5,107 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Chatbot</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+                body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            color: #333;
         }
         #chat-container {
-            width: 400px;
+            width: 450px;
             background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             display: flex;
             flex-direction: column;
-            height: 500px;
+            height: 600px;
+            overflow: hidden;
         }
         #chat-box {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
-            border-bottom: 2px solid #ddd;
-            background-color: #fafafa;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
         }
         .message {
             display: inline-block;
             margin: 10px;
             max-width: 80%;
             word-wrap: break-word;
-            border-radius: 10px;
-            padding: 10px;
-            transition: transform 0.3s ease;
+            border-radius: 15px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
         .user {
-            background-color: #cce5ff;
+            background-color: #007bff;
+            color: #fff;
             align-self: flex-end;
+            border-bottom-right-radius: 5px;
         }
         .bot {
             background-color: #e9ecef;
+            color: #333;
             align-self: flex-start;
+            border-bottom-left-radius: 5px;
         }
         .message.user {
-            animation: userMessageAnim 0.3s ease-out;
+            animation: slideInRight 0.3s ease-out;
         }
         .message.bot {
-            animation: botMessageAnim 0.3s ease-out;
+            animation: slideInLeft 0.3s ease-out;
         }
-        @keyframes userMessageAnim {
+        @keyframes slideInRight {
             from { transform: translateX(50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        @keyframes botMessageAnim {
+        @keyframes slideInLeft {
             from { transform: translateX(-50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
         #input-container {
-            padding: 20px;
+            padding: 15px;
             background-color: #fff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 2px solid #ddd;
-            border-radius: 0 0 10px 10px;
+            border-top: 1px solid #eee;
         }
         #user-input {
-            width: 80%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+            width: 75%;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        #user-input:focus {
+            border-color: #007bff;
         }
         #send-button {
-            padding: 10px 15px;
+            padding: 12px 20px;
             background-color: #007bff;
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
         }
         #send-button:hover {
             background-color: #0056b3;
         }
-        #user-input:focus, #send-button:focus {
-            outline: none;
-        }
         .typing-indicator {
             font-style: italic;
-            color: #6c757d;
-            margin-top: 10px;
+            color: #888;
+            margin: 10px 0;
+            font-size: 13px;
         }
-    </style>
-</head>
-<body>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <div id="input-container">
-            <input type="text" id="user-input" placeholder="Ask me something..." onkeyup="handleKeyPress(event)">
-            <button id="send-button" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        #chat-box::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 
     <script>
         const questions = [
