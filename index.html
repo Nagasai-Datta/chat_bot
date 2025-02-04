@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 400px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        #chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 2px solid #ddd;
+            background-color: #fafafa;
+        }
+        .message {
+            display: inline-block;
+            margin: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            border-radius: 10px;
+            padding: 10px;
+            transition: transform 0.3s ease;
+        }
+        .user {
+            background-color: #cce5ff;
+            align-self: flex-end;
+        }
+        .bot {
+            background-color: #e9ecef;
+            align-self: flex-start;
+        }
+        .message.user {
+            animation: userMessageAnim 0.3s ease-out;
+        }
+        .message.bot {
+            animation: botMessageAnim 0.3s ease-out;
+        }
+        @keyframes userMessageAnim {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes botMessageAnim {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        #input-container {
+            padding: 20px;
+            background-color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #ddd;
+            border-radius: 0 0 10px 10px;
+        }
+        #user-input {
+            width: 80%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        #send-button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        #user-input:focus, #send-button:focus {
+            outline: none;
+        }
+        .typing-indicator {
+            font-style: italic;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Ask me something..." onkeyup="handleKeyPress(event)">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { question: "How can I access the VIT student portal?", answer: "You can access the VIT student portal, known as VTOP (VIT Online Portal), by visiting https://vtop.vit.ac.in/vtop/. This platform allows students to manage academic and administrative tasks." },
+            { question: "What should I do if I forget my VTOP password?", answer: "If you forget your VTOP password, you can reset it by visiting the VTOP login page and selecting the “Forgot Password” option. Follow the instructions provided to set a new password." },
+            { question: "How do I register for courses at VIT?", answer: "Course registration at VIT is conducted through the VTOP portal. Log in to your account, navigate to the course registration section, and select the courses you wish to enroll in. Ensure you adhere to the registration deadlines and guidelines provided by the university." },
+            { question: "What is the maximum number of credits I can register for in a semester?", answer: "Students can register for a maximum of 27 credits in a semester. This includes both confirmed registrations and courses on the waiting list. Courses on the waiting list do not count towards the credit limit." },
+            { question: "How can I access online library resources?", answer: "VIT provides access to online library resources through the RemoteXs platform. You can log in at https://egateway.vit.ac.in/ using your VIT credentials to access various academic resources." },
+            { question: "How do I apply for scholarships at VIT?", answer: "VIT offers various scholarships based on academic performance and other criteria. Information about available scholarships and the application process can be found on the official VIT website or by contacting the university’s scholarship office." },
+            { question: "What is the procedure for hostel accommodation?", answer: "Hostel accommodation is covered for students during the admission process. It is available on a first-come, first-served basis. Students need to seek approval from the concerned authorities to secure a hostel seat. For detailed information, please refer to the hostel office or the official VIT website." },
+            { question: "How can I contact the VIT administration for general inquiries?", answer: "For general inquiries, you can contact the VIT administration through the following channels: \n• Email: admin@vit.ac.in \n• Phone: +91-416-220 2188/2050. For specific departments or services, please refer to the contact information provided on the VIT website." },
+            { question: "How do I access my course materials online?", answer: "Course materials are available through the VTOP portal. Students can log in to their VTOP account, navigate to the “Course Page” section, and access lecture notes, assignments, and other resources." },
+            { question: "What is the procedure for applying for a leave of absence?", answer: "To apply for a leave of absence, students should submit a leave application through the VTOP portal or contact their respective department heads. Approval is subject to university policies and departmental guidelines." },
+            { question: "What is the minimum attendance criteria for writing exams?", answer: "Students are expected to maintain 100% attendance, but a relaxation of 75% is given for various reasons. Students who have a CGPA of 9.0 or higher are exempted from this policy." },
+            { question: "What is FFCS (Fully Flexible Credit System)?", answer: "FFCS stands for Fully Flexible Credit System.It allows students to prepare their own timetable with specific courses they intend to take in a semester, along with the class timings and choice of professors." },
+            { question: "How do I pay the fee for the re-registered courses?", answer: "After course registration, you need to generate the invoice. Subsequently, you can pay the course fee through the online fee payment link." },
+            { question: "I have an issue with fee payment. Whom should I contact?", answer: "If transaction has failed, contact your bank. If transaction is successful, then contact O/o Finance (fo@vit.ac.in). If payment is made multiple times then contact O/o Academics (dean.acad@vit.ac.in)." },
+            { question: "Last semester i did course substitution for a subject in which i got 'N' grade. Will the ‘N’ grade be removed from my grade history?", answer: "The ‘N’ grade will be displayed in your grade history. However, the grade will not be included in the calculation of grade point average." },
+            { question: "I have got 'N' grade in a course. Can I re-register for this course during Summer term?", answer: "As per regulations, if you were given 'N' grade due to malpractice or shortage of attendance, you will not be permitted to re-register for the course during any of the optional semesters." },
+            { question: "What is an optional semester?", answer: "In an academic year, Fall Semester and Winter Semester are regular semesters. Other opportunities such as weekend intrasemester, summer term, and winter intersessions are termed as optional semesters." },
+            { question: "Does the Institute offer optional semesters every year?", answer: "It is not compulsory to offer optional semesters every year. Offering these semesters depends on the requirement and availability of necessary resources." },
+            { question: "I have re-registered for the courses. I am not able to pay the course fee. What should I do?", answer: "Ensure that you have generated the invoice. The option will be available in your timetable menu. After generating the invoice, proceed for online payment using the link provided." },
+            { question: "Whom should I approach for course registration related issues?", answer: "For course registration related issues, you should contact your Head of the Department." },
+            { question: "If any subject is not offered during registration process, whom to contact?", answer: "Contact your Head of the Department." },
+            { question: "I have recently changed my mobile number. Whom should I contact to update the number?", answer: "For updating personal information, including mobile number, contact either your proctor or Head of the Department." }
+        ];
+
+        const greetings = [
+            { input: "hi", response: "Hello! How can I assist you today?" },
+            { input: "hello", response: "Hi there! How can I help you?" },
+            { input: "how are you", response: "I'm just a bot, but thanks for asking! How can I assist you?" },
+            { input: "bye", response: "Goodbye! Feel free to ask if you need anything else." },
+            { input: "thanks", response: "You're welcome!" },
+            { input: "help", response: "Sure! Ask me any questions about courses, fees, or academics." }
+        ];
+
+        function sendMessage() {
+            let inputField = document.getElementById("user-input");
+            let userText = inputField.value.trim();
+
+            if (userText === "") return;
+
+            addMessage("You: " + userText, "user");
+
+            showTypingIndicator();
+
+            setTimeout(() => {
+                let reply = getResponse(userText);
+                addMessage("Bot: " + reply, "bot");
+                hideTypingIndicator();
+            }, 1000); // 1-second delay to simulate bot typing
+
+            inputField.value = "";
+        }
+
+        function addMessage(text, sender) {
+            let chatBox = document.getElementById("chat-box");
+            let message = document.createElement("div");
+            message.textContent = text;
+            message.classList.add("message", sender);
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the bottom
+        }
+
+        function showTypingIndicator() {
+            let chatBox = document.getElementById("chat-box");
+            let typingMessage = document.createElement("div");
+            typingMessage.textContent = "Bot is typing...";
+            typingMessage.classList.add("typing-indicator");
+            chatBox.appendChild(typingMessage);
+        }
+
+        function hideTypingIndicator() {
+            let chatBox = document.getElementById("chat-box");
+            let typingMessage = document.querySelector(".typing-indicator");
+            if (typingMessage) {
+                typingMessage.remove();
+            }
+        }
+
+        function getResponse(userText) {
+            // Convert user input to lowercase for case-insensitive matching
+            let lowerUserText = userText.toLowerCase();
+
+            // Check for greeting first
+            for (let greeting of greetings) {
+                if (lowerUserText.includes(greeting.input)) {
+                    return greeting.response;
+                }
+            }
+
+            // If it's not a greeting, check for a FAQ
+            for (let q of questions) {
+                let lowerQuestion = q.question.toLowerCase();
+                if (lowerQuestion.includes(lowerUserText)) {
+                    return q.answer;
+                }
+            }
+
+            // Default response if nothing matches
+            return "Sorry, I don't understand that. Could you please rephrase?";
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
