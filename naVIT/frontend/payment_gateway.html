@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .payment-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        .header .logo {
+            font-size: 32px;
+            color: #1565c0;
+            font-weight: bold;
+        }
+        .amount-display {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid #bbdefb;
+        }
+        .amount-display h2 {
+            margin: 0;
+            color: #1565c0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .card-details {
+            display: flex;
+            gap: 15px;
+        }
+        .card-details .form-group {
+            flex: 1;
+        }
+        .form-group.card-number {
+            flex: 2;
+        }
+        button {
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0d47a1;
+        }
+        .security-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .back-button {
+            background-color: #f44336;
+        }
+        .back-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="header">
+            <div class="logo">PaySecure</div>
+            <p>Secure Payment Gateway</p>
+        </div>
+        
+        <div class="amount-display">
+            <h3>Amount to Pay</h3>
+            <h2 id="paymentAmount">0 Credits</h2>
+        </div>
+        
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="cardName">Cardholder Name</label>
+                <input type="text" id="cardName" placeholder="Enter cardholder name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="cardNumber">Card Number</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required>
+            </div>
+            
+            <div class="card-details">
+                <div class="form-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cvv">CVV</label>
+                    <input type="text" id="cvv" placeholder="123" maxlength="3" required>
+                </div>
+            </div>
+            
+            <button type="submit" id="confirmPayment">Confirm Payment</button>
+            <button type="button" id="cancelPayment" class="back-button">Cancel Payment</button>
+        </form>
+        
+        <div class="security-note">
+            <p>This is a secure payment. Your card details are encrypted and not stored.</p>
+            <p><small>Note: This is a fake payment gateway for demonstration purposes.</small></p>
+        </div>
+    </div>
+    
+    <script>
+        // Get pending payment amount from localStorage
+        const pendingCredits = localStorage.getItem('pendingCredits') || 0;
+        document.getElementById('paymentAmount').textContent = pendingCredits + ' Credits';
+        
+        // Handle card number formatting
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            // Remove non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            // Add space after every 4 digits
+            value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+            this.value = value;
+        });
+        
+        // Handle expiry date formatting
+        document.getElementById('expiryDate').addEventListener('input', function(e) {
+            // Remove non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            // Format as MM/YY
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            this.value = value;
+        });
+        
+        // CVV should only allow numbers
+        document.getElementById('cvv').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+        });
+        
+        // Handle form submission
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Set payment as successful
+            localStorage.setItem('paymentSuccess', 'true');
+            
+            // Redirect back to main app
+            document.getElementById('confirmPayment').textContent = 'Processing...';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        });
+        
+        // Validate form
+        function validateForm() {
+            const cardName = document.getElementById('cardName').value;
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const expiryDate = document.getElementById('expiryDate').value;
+            const cvv = document.getElementById('cvv').value;
+            
+            if (!cardName) {
+                alert('Please enter cardholder name');
+                return false;
+            }
+            
+            if (cardNumber.length < 16) {
+                alert('Please enter a valid card number');
+                return false;
+            }
+            
+            if (!expiryDate || expiryDate.length < 5) {
+                alert('Please enter a valid expiry date');
+                return false;
+            }
+            
+            if (cvv.length < 3) {
+                alert('Please enter a valid CVV');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Handle cancel button
+        document.getElementById('cancelPayment').addEventListener('click', function() {
+            localStorage.removeItem('pendingCredits');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
