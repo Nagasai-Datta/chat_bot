@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIT Shuttle Tracking App</title>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e3f2fd;
+        }
+        header {
+            background-color: #1565c0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .wallet {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .wallet button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .wallet button:hover {
+            background-color: #45a049;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .location-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .location-buttons button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .location-buttons button:hover {
+            background-color: #0d47a1;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        #distance, #price {
+            font-size: 20px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #d32f2f;
+            background-color: #ffcdd2;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #e3f2fd;
+        }
+        .login-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 350px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .login-form button {
+            padding: 10px 20px;
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .login-form button:hover {
+            background-color: #0d47a1;
+        }
+        
+        /* New Credit Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 320px;
+            position: relative;
+            animation: popup-fade 0.3s ease-out;
+        }
+        
+        @keyframes popup-fade {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #777;
+            line-height: 1;
+        }
+        
+        .popup-close:hover {
+            color: #333;
+        }
+        
+        .popup-content h2 {
+            margin-top: 0;
+            color: #1565c0;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .popup-content input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px 0 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        .popup-content .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .popup-content button {
+            padding: 12px 0;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            flex-grow: 1;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .popup-content .proceed-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .popup-content .proceed-btn:hover {
+            background-color: #3d9140;
+        }
+        
+        .popup-content .cancel-btn {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .popup-content .cancel-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Book Ride Button */
+        .book-ride-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 18px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: none;
+        }
+        .book-ride-btn:hover {
+            background-color: #b71c1c;
+        }
+        
+        /* Booking Confirmation Modal */
+        #bookingModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .booking-box {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            padding: 25px;
+            text-align: center;
+        }
+        .booking-box h2 {
+            margin-top: 0;
+            color: #1565c0;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 10px;
+        }
+        .booking-details {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .booking-details p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .booking-details .highlight {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .booking-box .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .booking-box button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .booking-box .confirm-btn {
+            background-color: #4caf50;
+            color: white;
+            font-weight: bold;
+            flex-grow: 2;
+            margin-right: 10px;
+        }
+        .booking-box .confirm-btn:hover {
+            background-color: #45a049;
+        }
+        .booking-box .cancel-btn {
+            background-color: #f5f5f5;
+            color: #333;
+            flex-grow: 1;
+        }
+        .booking-box .cancel-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        
+        .success-message {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .success-message i {
+            font-size: 64px;
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+        .success-message h3 {
+            color: #4caf50;
+            margin-bottom: 10px;
+        }
+        
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+        #login-message {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f8f9fa;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-form">
+            <h2>Login</h2>
+            <input type="text" id="userId" placeholder="User ID">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <p id="login-message"><strong>Use Username: 1234 & Password: 1234 to log in.</strong></p>
+    </div>
+
+    <!-- Main Map Page -->
+    <div id="mainPage" style="display: none;">
+        <header>
+            <h1>VIT Shuttle Tracking App</h1>
+            <p>Enter start and destination locations to see the route.</p>
+        </header>
+        <div class="wallet">
+            Wallet: <span id="walletAmount">77</span> Credits
+            <button id="addCreditsBtn">Add Credits</button>
+        </div>
+        <div class="container">
+            <input id="start" type="text" placeholder="Enter Start Location">
+            <input id="end" type="text" placeholder="Enter Destination">
+            <button onclick="getRoute()">Show Route</button>
+            <p id="distance"></p>
+            <p id="price"></p>
+            <button id="bookRideBtn" class="book-ride-btn">Book a Ride</button>
+            <div class="location-buttons">
+                <button onclick="quickSelectLocation('kalpana chawla ground')">VIT Main Gate</button>
+                <button onclick="quickSelectLocation('Silver Jubilee Tower')">Silver Jubilee Tower</button>
+                <button onclick="quickSelectLocation('Greenos')">Foodys</button>
+                <button onclick="quickSelectLocation('Woodys')">Woodys</button>
+                <button onclick="quickSelectLocation('VIT Lake')">Girls Hostel</button>
+                <button onclick="quickSelectLocation('Pearl Research Park')">Pearl Research Park</button>
+                <button onclick="quickSelectLocation('TT Fountain Garden')">TT Fountain Garden</button>
+                <button onclick="quickSelectLocation('EV Periyar Library')">EV Periyar Library</button>
+                <button onclick="quickSelectLocation('MH Swimming Pool')">MH Swimming Pool</button>
+                <button onclick="quickSelectLocation('VIT Indoor Stadium')">VIT Indoor Stadium</button>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- NEW Credit Popup (Overlay) -->
+    <div id="creditPopup" class="popup-overlay">
+        <div class="popup-content">
+            <span class="popup-close">&times;</span>
+            <h2>Add Credits</h2>
+            <input type="number" id="creditAmount" placeholder="Enter Credits" min="1" value="10">
+            <div class="button-group">
+                <button id="proceedToPaymentBtn" class="proceed-btn">Proceed to Payment</button>
+                <button id="cancelPaymentBtn" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Confirmation Modal -->
+    <div id="bookingModal">
+        <div class="booking-box">
+            <h2>Confirm Booking</h2>
+            
+            <div class="booking-details">
+                <p id="bookingFrom">From: <span></span></p>
+                <p id="bookingTo">To: <span></span></p>
+                <p id="bookingDistance">Distance: <span></span></p>
+                <p id="bookingPrice" class="highlight">Cost: <span></span> Credits</p>
+            </div>
+            
+            <p>Are you sure you want to book this ride?</p>
+            
+            <div class="button-group">
+                <button id="confirmBookingBtn" class="confirm-btn">Yes, Book Now</button>
+                <button id="cancelBookingBtn" class="cancel-btn">Cancel</button>
+            </div>
+            
+            <div id="successMessage" class="success-message" style="display: none;">
+                <i>✓</i>
+                <h3>Ride Successfully Booked!</h3>
+                <p>Your shuttle is on the way.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        var map;
+        var shuttleIcon = { iconUrl: 'bus.webp', iconSize: [40, 40] };
+        var shuttleMarker;
+        var routeLayer;
+        var currentCredits = 77;
+        var currentDistance = "";
+        var currentPrice = 0;
+        var currentStart = "";
+        var currentEnd = "";
+
+      
+        const creditPopup = document.getElementById('creditPopup');
+        const mainPage = document.getElementById('mainPage');
+        const loginPage = document.getElementById('loginPage');
+        const walletAmount = document.getElementById('walletAmount');
+        const addCreditsBtn = document.getElementById('addCreditsBtn');
+        const proceedToPaymentBtn = document.getElementById('proceedToPaymentBtn');
+        const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+        const popupCloseBtn = document.querySelector('.popup-close');
+        const creditAmountInput = document.getElementById('creditAmount');
+        const toast = document.getElementById('toast');
+        const bookRideBtn = document.getElementById('bookRideBtn');
+        const bookingModal = document.getElementById('bookingModal');
+        const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+        const cancelBookingBtn = document.getElementById('cancelBookingBtn');
+        const successMessage = document.getElementById('successMessage');
+
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            checkPaymentReturn();
+            
+            
+            addCreditsBtn.addEventListener('click', showCreditPopup);
+            proceedToPaymentBtn.addEventListener('click', redirectToPaymentGateway);
+            cancelPaymentBtn.addEventListener('click', hideCreditPopup);
+            popupCloseBtn.addEventListener('click', hideCreditPopup);
+            bookRideBtn.addEventListener('click', showBookingConfirmation);
+            confirmBookingBtn.addEventListener('click', confirmBooking);
+            cancelBookingBtn.addEventListener('click', hideBookingModal);
+            
+            
+            creditPopup.addEventListener('click', function(e) {
+                if (e.target === creditPopup) {
+                    hideCreditPopup();
+                }
+            });
+        });
+
+        
+        function showCreditPopup() {
+            creditPopup.style.display = 'flex';
+        }
+
+        function hideCreditPopup() {
+            creditPopup.style.display = 'none';
+        }
+        
+        function showBookingConfirmation() {
+            
+            document.querySelector('#bookingFrom span').textContent = currentStart;
+            document.querySelector('#bookingTo span').textContent = currentEnd;
+            document.querySelector('#bookingDistance span').textContent = currentDistance.replace('Total Distance: ', '');
+            document.querySelector('#bookingPrice span').textContent = currentPrice;
+            
+            
+            successMessage.style.display = 'none';
+            
+            
+            bookingModal.style.display = 'flex';
+        }
+        
+        function hideBookingModal() {
+            bookingModal.style.display = 'none';
+        }
+        
+        function confirmBooking() {
+            
+            if (currentCredits >= currentPrice) {
+                
+                currentCredits -= currentPrice;
+                walletAmount.textContent = currentCredits;
+                
+                
+                successMessage.style.display = 'block';
+                
+                
+                document.querySelector('.booking-box .button-group').style.display = 'none';
+                
+                
+                setTimeout(() => {
+                    hideBookingModal();
+                    document.querySelector('.booking-box .button-group').style.display = 'flex';
+                    
+                    
+                    showToast('Ride booked successfully!');
+                }, 3000);
+            } else {
+                
+                hideBookingModal();
+                showToast('Not enough credits. Please add more credits to your wallet.');
+            }
+        }
+
+        function redirectToPaymentGateway() {
+            const amount = creditAmountInput.value;
+            if (amount && amount > 0) {
+                
+                localStorage.setItem('pendingCredits', amount);
+                
+                window.location.href = 'payment-gateway.html';
+            } else {
+                showToast('Please enter a valid amount');
+            }
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function checkPaymentReturn() {
+            
+            const successPayment = localStorage.getItem('paymentSuccess');
+            const pendingCredits = localStorage.getItem('pendingCredits');
+            
+            if (successPayment === 'true' && pendingCredits) {
+                
+                currentCredits += parseInt(pendingCredits);
+                walletAmount.textContent = currentCredits;
+                
+                
+                showToast(`Payment successful! Added ${pendingCredits} credits to your wallet.`);
+                
+                
+                localStorage.removeItem('paymentSuccess');
+                localStorage.removeItem('pendingCredits');
+                
+                
+                loginPage.style.display = 'none';
+                mainPage.style.display = 'block';
+                initMap();
+            }
+        }
+
+        async function login() {
+    const userId = document.getElementById('userId').value;
+    const password = document.getElementById('password').value;
+
+    //passing request to backend for user authentication
+    const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, password })//convert this object data to json
+    });
+
+    const data = await response.json();
+    if (data.success) {
+       
+        loginPage.style.display = 'none';
+        mainPage.style.display = 'block';
+
+        
+        walletAmount.textContent = data.wallet;
+
+        
+        initMap();
+    } else {
+        alert(data.message || 'Invalid credentials');
+    }
+}
+        function initMap() {
+            if (!map && document.getElementById('map')) {
+                map = L.map('map').setView([12.9716, 79.1583], 13);
+                L.tileLayer('https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=1189b52babb14cf98b15ef0344852f28', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+                
+                
+                if (!shuttleIcon.iconUrl) {
+                    shuttleIcon = L.icon(shuttleIcon);
+                }
+            }
+        }
+
+        async function geocodeAddress(address) {
+            let geoapifyUrl = `https://api.geoapify.com/v1/geocode/search?text=${address}&apiKey=1189b52babb14cf98b15ef0344852f28`;
+            let response = await fetch(geoapifyUrl);
+            let data = await response.json();
+            if (data.features && data.features.length > 0) {
+                return [data.features[0].geometry.coordinates[1], data.features[0].geometry.coordinates[0]]; // Return [lat, lon]
+            }
+            return null;
+        }
+
+        async function getRoute() {
+            let start = document.getElementById("start").value;
+            let end = document.getElementById("end").value;
+            if (!start || !end) return;
+
+            
+            currentStart = start;
+            currentEnd = end;
+
+            let startCoords = await geocodeAddress(start);
+            let endCoords = await geocodeAddress(end);
+
+            if (!startCoords || !endCoords) {
+                return alert('Invalid start or end location');
+            }
+            //for routing passing latitude and longitude for start and end 
+            let geoapifyUrl = `https://api.geoapify.com/v1/routing?waypoints=${startCoords[0]},${startCoords[1]}|${endCoords[0]},${endCoords[1]}&mode=drive&apiKey=1189b52babb14cf98b15ef0344852f28`;
+            let response = await fetch(geoapifyUrl);
+            let data = await response.json();
+
+            if (data.features && data.features.length > 0) {
+                let coords = data.features[0].geometry.coordinates[0].map(coord => [coord[1], coord[0]]);
+                let distance = (data.features[0].properties.distance / 1000).toFixed(2); 
+
+                
+                let price;
+                if (distance < 0.5) {
+                    price = 10; 
+                } else {
+                   
+                    price = Math.min(Math.round(distance * 10), 20); 
+                }
+
+                
+                currentDistance = `Total Distance: ${distance} km`;
+                currentPrice = price;
+
+                document.getElementById("distance").textContent = currentDistance;
+                document.getElementById("price").textContent = `Estimated Price: ${price} Credits`;
+
+                
+                bookRideBtn.style.display = 'inline-block';
+
+                if (routeLayer) map.removeLayer(routeLayer);
+                routeLayer = L.polyline(coords, { color: 'black', weight: 4 }).addTo(map);
+                map.fitBounds(routeLayer.getBounds());
+
+                if (shuttleMarker) map.removeLayer(shuttleMarker);
+                shuttleMarker = L.marker(coords[0], { icon: shuttleIcon }).addTo(map);
+                moveShuttle(coords);
+            } else {
+                alert('Route not found');
+            }
+        }
+
+        function quickSelectLocation(location) {
+            if (!document.getElementById("start").value) document.getElementById("start").value = location;
+            else document.getElementById("end").value = location;
+            getRoute();
+        }
+
+        function moveShuttle(coords) {
+            let i = 0;
+            let interval = setInterval(() => {
+                if (i < coords.length) {
+                    shuttleMarker.setLatLng(coords[i]);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+    </script>
+</body>
+</html>
