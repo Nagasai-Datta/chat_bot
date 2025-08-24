@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0">VIT Student Assistant</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div id="chat-box" class="p-3" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                        <div class="alert alert-info text-center">
+                            Welcome! How can I help you with VIT-related queries?
+                        </div>
+                    </div>
+                    <div class="card-footer p-3">
+                        <div class="input-group">
+                            <input type="text" id="user-input" class="form-control" placeholder="Type your message..." aria-label="Type your message">
+                            <button id="send-button" class="btn btn-primary" type="button">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/chat.js"></script>
+<%- include('partials/footer') %>
